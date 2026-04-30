@@ -128,6 +128,7 @@ function Get-AppSourceProduct {
 $telemetryScope = InitTelemetryScope -name $MyInvocation.InvocationName -parameterValues $PSBoundParameters -includeParameters @()
 try {
     $authContext = Renew-BcAuthContext -bcAuthContext $authContext
+    $productsQuery = '$filter=resourceType eq ''AzureDynamics365BusinessCentral'''
     if ($productId) {
         $product = Invoke-IngestionApiGet -authContext $authContext -path "/products/$productId" -silent:($silent.IsPresent)
         if (-not $product) {
@@ -136,14 +137,14 @@ try {
         $products = @($product)
     }
     elseif ($productName) {
-        $product = Invoke-IngestionApiGetCollection -authContext $authContext -path '/products' -silent:($silent.IsPresent) | Where-Object { $_.Name -like $productName }
+        $product = Invoke-IngestionApiGetCollection -authContext $authContext -path '/products' -query $productsQuery -silent:($silent.IsPresent) | Where-Object { $_.Name -like $productName }
         if (-not $product) {
             throw "Product with Name $productName cannot be found"
         }
         $products = @($product)
     }
     else {
-        $products = @(Invoke-IngestionApiGetCollection -authContext $authContext -path '/products' -silent:($silent.IsPresent))
+        $products = @(Invoke-IngestionApiGetCollection -authContext $authContext -path '/products' -query $productsQuery -silent:($silent.IsPresent))
     }
     $products | ForEach-Object {
         $product = $_
